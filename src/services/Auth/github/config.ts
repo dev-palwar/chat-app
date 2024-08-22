@@ -1,16 +1,22 @@
 import passport from "passport";
 import { Strategy as GitHubStrategy } from "passport-github2";
 
-// Configuring Passport to use GitHubStrategy
 export function configurePassport() {
+  const clientID = process.env.GITHUB_CLIENT_ID;
+  const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+
+  if (!clientID || !clientSecret) {
+    throw new Error("GitHub OAuth credentials are missing");
+  }
+
   passport.use(
     new GitHubStrategy(
       {
-        clientID: process.env.GITHUB_CLIENT_ID as string,
-        clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+        clientID,
+        clientSecret,
         callbackURL: "http://localhost:3000/auth/github/callback",
       },
-      (profile: any, done: any) => {
+      (accessToken: string, refreshToken: string, profile: any, done: any) => {
         // save the data in a db
         return done(null, profile);
       }

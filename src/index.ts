@@ -1,11 +1,28 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import session from "express-session";
 import passport from "passport";
 import { configurePassport } from "../src/services/Auth/github/config";
 import authRouter from "../src/services/Auth/github/routes/index";
+import { config } from "dotenv";
+import screenRouter from "frontend/routes";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// initializing enviorment variables
+config();
 
 const app = express();
 configurePassport();
+
+// Getting the current directory name
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "frontend", "static"));
+
+// Serving static files
+app.use(express.static(path.join(__dirname, "frontend", "static")));
 
 // Configuring session middleware
 app.use(
@@ -22,26 +39,8 @@ app.use(passport.session());
 
 // Routes
 app.use("/auth", authRouter);
+app.use(screenRouter);
 
-// Define routes
-app.get("/", (req: Request, res: Response) => {
-  res.send('<a href="/auth/github">Login with GitHub</a>');
-});
-
-app.get("/profile", (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) {
-    return res.redirect("/");
-  }
-  res.send(`Hello, ${req.user}!`);
-});
-
-app.get("/logout", (req: Request, res: Response) => {
-  req.logout(() => {
-    res.redirect("/");
-  });
-});
-
-// Start the server
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
 });
